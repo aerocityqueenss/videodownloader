@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>MediaPulse Downloader</title>
+    <!--
+      Styles are inline because MV3's CSP forbids remote stylesheets and
+      scripts. Everything ships inside the extension, so the popup opens
+      instantly and works offline.
+    -->
+    <style>
+      /* ====================================================================
+       * Design tokens
+       * ==================================================================*/
+      :root {
+        color-scheme: light dark;
+
+        --brand: #6366f1;
+        --brand-2: #0ea5e9;
+        --brand-soft: rgba(99, 102, 241, 0.12);
+
+        --bg: #ffffff;
+        --bg-elevated: #ffffff;
+        --bg-subtle: #f8fafc;
+        --border: #e5e7eb;
+        --border-strong: #d1d5db;
+        --text: #0f172a;
+        --text-muted: #64748b;
+        --text-faint: #94a3b8;
+
+        --video: #0ea5e9;
+        --hls: #8b5cf6;
+        --danger: #ef4444;
+        --success: #10b981;
+
+        --radius-lg: 14px;
+        --radius-md: 10px;
+        --radius-sm: 7px;
+
+        --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.06);
+        --shadow-md: 0 4px 14px rgba(15, 23, 42, 0.08);
+
+        --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        --mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
+      }
+
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #0f1117;
+          --bg-elevated: #171a23;
+          --bg-subtle: #1c202b;
+          --border: #262b38;
+          --border-strong: #333a4a;
+          --text: #e8ecf4;
+          --text-muted: #9aa4b8;
+          --text-faint: #6b7688;
+          --brand-soft: rgba(99, 102, 241, 0.18);
+          --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+          --shadow-md: 0 6px 18px rgba(0, 0, 0, 0.45);
+        }
+      }
+
+      /* ====================================================================
+       * Base
+       * ==================================================================*/
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        width: 400px;
+        min-height: 220px;
+        max-height: 580px;
+        font-family: var(--font);
+        font-size: 13px;
+        line-height: 1.45;
+        color: var(--text);
+        background: var(--bg);
+        -webkit-font-smoothing: antialiased;
+        overflow: hidden;
+      }
+
+      button {
+        font: inherit;
+        color: inherit;
+        cursor: pointer;
+      }
+
+      button:focus-visible,
+      a:focus-visible {
+        outline: 2px solid var(--brand);
+        outline-offset: 2px;
+      }
+
+      /* ====================================================================
+       * Header
+       * ==================================================================*/
+      .header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 14px 16px 12px;
+        border-bottom: 1px solid var(--border);
+        background: linear-gradient(135deg, var(--brand-soft), transparent 70%);
+      }
+
+      .brand-mark {
+        width: 32px;
+        height: 32px;
+        flex: 0 0 32px;
+        border-radius: 9px;
+        background: linear-gradient(135deg, var(--brand), var(--brand-2));
+        display: grid;
+        place-items: center;
+        box-shadow: var(--shadow-sm);
+      }
+
+      .brand-mark svg {
+        width: 20px;
+        height: 20px;
+        display: block;
+      }
+
+      .brand-text {
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+        flex: 1;
+      }
+
+      .brand-title {
+        font-size: 14px;
+        font-weight: 650;
+        letter-spacing: -0.01em;
+        line-height: 1.2;
+      }
+
+      .brand-sub {
+        font-size: 11px;
+        color: var(--text-muted);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .icon-btn {
+        width: 28px;
+        height: 28px;
+        flex: 0 0 28px;
+        display: grid;
+        place-items: center;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        background: var(--bg-elevated);
+        color: var(--text-muted);
+        transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+      }
+
+      .icon-btn:hover {
+        background: var(--bg-subtle);
+        color: var(--text);
+        border-color: var(--border-strong);
+      }
+
+      .icon-btn svg {
+        width: 15px;
+        height: 15px;
+      }
+
+      .icon-btn.spinning svg {
+        animation: spin 0.6s linear infinite;
+      }
+
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      /* ====================================================================
+       * Toolbar (count + clear)
+       * ==================================================================*/
+      .toolbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 9px 16px;
+        border-bottom: 1px solid var(--border);
+        background: var(--bg-subtle);
+      }
+
+      .count {
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.02em;
+        text-transform: uppercase;
+        color: var(--text-muted);
+      }
+
+      .count strong {
+        color: var(--text);
+        font-weight: 700;
+      }
+
+      .link-btn {
+        border: 0;
+        background: none;
+        padding: 2px 4px;
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--text-muted);
+        border-radius: 5px;
+        transition: color 0.15s ease, background 0.15s ease;
+      }
+
+      .link-btn:hover {
+        color: var(--danger);
+        background: rgba(239, 68, 68, 0.1);
+      }
+
+      .link-btn[hidden] {
+        display: none;
+      }
+
+      /* ====================================================================
+       * List
+       * ==================================================================*/
+      .list {
+        list-style: none;
+        margin: 0;
+        padding: 8px;
+        max-height: 430px;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+      }
+
+      .list::-webkit-scrollbar {
+        width: 8px;
+      }
+
+      .list::-webkit-scrollbar-thumb {
+        background: var(--border-strong);
+        border-radius: 8px;
+        border: 2px solid var(--bg);
+      }
+
+      .card {
+        display: grid;
+        grid-template-columns: 34px 1fr auto;
+        align-items: center;
+        gap: 10px;
+        padding: 10px;
+        margin-bottom: 6px;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+        background: var(--bg-elevated);
+        box-shadow: var(--shadow-sm);
+        transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+        animation: rise 0.22s ease both;
+      }
+
+      .card:hover {
+        border-color: var(--border-strong);
+        box-shadow: var(--shadow-md);
+      }
+
+      @keyframes rise {
+        from {
+          opacity: 0;
+          transform: translateY(3px);
+        }
+      }
+
+      .card:last-child {
+        margin-bottom: 0;
+      }
+
+      /* Format badge */
+      .badge {
+        width: 34px;
+        height: 34px;
+        border-radius: var(--radius-sm);
+        display: grid;
+        place-items: center;
+        font-family: var(--mono);
+        font-size: 9px;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+        text-transform: uppercase;
+        color: #fff;
+        background: var(--video);
+      }
+
+      .badge[data-kind='hls'] {
+        background: var(--hls);
+      }
+
+      /* Meta */
+      .meta {
+        min-width: 0;
+      }
+
+      .meta-title {
+        font-size: 12.5px;
+        font-weight: 600;
+        line-height: 1.3;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .meta-sub {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin-top: 2px;
+        font-size: 11px;
+        color: var(--text-muted);
+        min-width: 0;
+      }
+
+      .meta-sub .host {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        min-width: 0;
+      }
+
+      .dot {
+        width: 2px;
+        height: 2px;
+        border-radius: 50%;
+        background: var(--text-faint);
+        flex: 0 0 2px;
+      }
+
+      .size {
+        flex: 0 0 auto;
+        font-variant-numeric: tabular-nums;
+      }
+
+      /* Download button */
+      .download {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        height: 30px;
+        padding: 0 11px;
+        border: 0;
+        border-radius: var(--radius-sm);
+        font-size: 12px;
+        font-weight: 600;
+        color: #fff;
+        background: linear-gradient(135deg, var(--brand), var(--brand-2));
+        box-shadow: 0 1px 2px rgba(99, 102, 241, 0.35);
+        transition: filter 0.15s ease, transform 0.1s ease, opacity 0.15s ease;
+        white-space: nowrap;
+      }
+
+      .download:hover:not(:disabled) {
+        filter: brightness(1.07);
+      }
+
+      .download:active:not(:disabled) {
+        transform: translateY(1px);
+      }
+
+      .download:disabled {
+        cursor: default;
+        opacity: 0.75;
+      }
+
+      .download.is-done {
+        background: var(--success);
+        box-shadow: 0 1px 2px rgba(16, 185, 129, 0.35);
+      }
+
+      .download.is-error {
+        background: var(--danger);
+        box-shadow: 0 1px 2px rgba(239, 68, 68, 0.35);
+      }
+
+      .download svg {
+        width: 13px;
+        height: 13px;
+        flex: 0 0 13px;
+      }
+
+      /* ====================================================================
+       * Empty / error states
+       * ==================================================================*/
+      .state {
+        padding: 34px 26px 30px;
+        text-align: center;
+      }
+
+      .state[hidden] {
+        display: none;
+      }
+
+      .state-art {
+        width: 56px;
+        height: 56px;
+        margin: 0 auto 14px;
+        border-radius: 16px;
+        display: grid;
+        place-items: center;
+        background: var(--brand-soft);
+        color: var(--brand);
+      }
+
+      .state-art svg {
+        width: 28px;
+        height: 28px;
+      }
+
+      .state-title {
+        margin: 0 0 6px;
+        font-size: 13.5px;
+        font-weight: 650;
+        letter-spacing: -0.01em;
+      }
+
+      .state-text {
+        margin: 0 auto;
+        max-width: 290px;
+        font-size: 12px;
+        line-height: 1.55;
+        color: var(--text-muted);
+      }
+
+      .state-text strong {
+        color: var(--text);
+        font-weight: 600;
+      }
+
+      .state-hint {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        margin-top: 14px;
+        padding: 6px 11px;
+        border-radius: 999px;
+        font-size: 11px;
+        font-weight: 500;
+        color: var(--text-muted);
+        background: var(--bg-subtle);
+        border: 1px solid var(--border);
+      }
+
+      .state-hint svg {
+        width: 12px;
+        height: 12px;
+        flex: 0 0 12px;
+      }
+
+      /* ====================================================================
+       * Footer
+       * ==================================================================*/
+      .footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        padding: 8px 16px;
+        border-top: 1px solid var(--border);
+        font-size: 10.5px;
+        color: var(--text-faint);
+      }
+
+      .footer-note {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .status-dot {
+        display: inline-block;
+        width: 6px;
+        height: 6px;
+        margin-right: 5px;
+        border-radius: 50%;
+        background: var(--success);
+        vertical-align: middle;
+      }
+
+      .status-dot.is-warn {
+        background: #f59e0b;
+      }
+
+      /* Toast shown after a download succeeds or fails. */
+      .toast {
+        position: fixed;
+        left: 50%;
+        bottom: 44px;
+        transform: translate(-50%, 12px);
+        padding: 8px 14px;
+        border-radius: 999px;
+        font-size: 11.5px;
+        font-weight: 600;
+        color: #fff;
+        background: #0f172a;
+        box-shadow: var(--shadow-md);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.2s ease, transform 0.2s ease;
+        max-width: 320px;
+        text-align: center;
+      }
+
+      .toast.is-visible {
+        opacity: 1;
+        transform: translate(-50%, 0);
+      }
+
+      .toast.is-error {
+        background: var(--danger);
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          animation-duration: 0.001ms !important;
+          transition-duration: 0.001ms !important;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <!-- ================================================================
+         Header
+         ============================================================== -->
+    <header class="header">
+      <div class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M2 12h4l2-7 3 14 3-10 2 3h6" />
+        </svg>
+      </div>
+      <div class="brand-text">
+        <div class="brand-title">MediaPulse</div>
+        <div class="brand-sub" id="pageHost">Detected media</div>
+      </div>
+      <button class="icon-btn" id="refreshBtn" type="button" title="Rescan this page" aria-label="Rescan this page">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 12a9 9 0 1 1-3.5-7.1" />
+          <path d="M21 3v6h-6" />
+        </svg>
+      </button>
+    </header>
+
+    <!-- ================================================================
+         Toolbar
+         ============================================================== -->
+    <div class="toolbar">
+      <span class="count" id="countLabel">No media found</span>
+      <button class="link-btn" id="clearBtn" type="button" hidden>Clear</button>
+    </div>
+
+    <!-- ================================================================
+         Results
+         ============================================================== -->
+    <ul class="list" id="list" aria-live="polite" aria-label="Detected media"></ul>
+
+    <!-- Empty state -->
+    <section class="state" id="emptyState">
+      <div class="state-art" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="4" width="20" height="16" rx="3" />
+          <path d="M10 9.5v5l4.5-2.5z" fill="currentColor" stroke="none" />
+        </svg>
+      </div>
+      <h2 class="state-title">No videos detected yet</h2>
+      <p class="state-text">
+        Start playing the video on this page, then reopen this popup. Media streams are captured
+        while they load &mdash; for streams that begin on click, press play first.
+      </p>
+      <div class="state-hint">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 12a9 9 0 1 1-3.5-7.1" />
+          <path d="M21 3v6h-6" />
+        </svg>
+        Tip: play the video, or refresh the page
+      </div>
+    </section>
+
+    <!-- Error / unsupported page state -->
+    <section class="state" id="errorState" hidden>
+      <div class="state-art" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="9" />
+          <path d="M12 8v5M12 16.5v.01" />
+        </svg>
+      </div>
+      <h2 class="state-title" id="errorTitle">This page cannot be inspected</h2>
+      <p class="state-text" id="errorText">
+        Chrome only lets extensions access regular web pages. Open a page that plays a video and
+        try again.
+      </p>
+    </section>
+
+    <!-- ================================================================
+         Footer
+         ============================================================== -->
+    <footer class="footer">
+      <span class="footer-note"><span class="status-dot" id="statusDot"></span><span id="statusText">Watching network</span></span>
+      <span>v1.0.0</span>
+    </footer>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+    <script src="popup.js"></script>
+  </body>
+</html>

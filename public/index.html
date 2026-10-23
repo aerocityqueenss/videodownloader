@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Labubo's Project Hub</title>
+  <meta name="description" content="Meet Labubo, your cute project companion who tracks every step of the build." />
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <div class="aurora" aria-hidden="true">
+    <span class="blob blob-a"></span>
+    <span class="blob blob-b"></span>
+    <span class="blob blob-c"></span>
+  </div>
+
+  <header class="topbar">
+    <a class="brand" href="/">
+      <span class="brand-mark" id="brandMark"></span>
+      <span class="brand-text">Labubo<span class="brand-dot">.</span>hub</span>
+    </a>
+    <nav class="topnav">
+      <a href="#overview">Overview</a>
+      <a href="#phases">Phases</a>
+      <a href="#about">About</a>
+      <button class="ghost-btn" id="themeToggle" type="button" title="Toggle theme">🌙</button>
+      <button class="cta-btn" id="openCompanionTop" type="button">Meet Labubo ✨</button>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero" id="overview">
+      <div class="hero-copy">
+        <span class="pill">🐣 Your project companion</span>
+        <h1>Every step of your project,<br /><em>told by a little labubu.</em></h1>
+        <p class="lede">
+          Labubo sits at the corner of your app and keeps track of the whole build —
+          design, code, tests and launch. Click the cute one, and it will happily
+          walk you through exactly what your project is doing right now.
+        </p>
+        <div class="hero-actions">
+          <button class="cta-btn big" id="openCompanionHero" type="button">
+            <span id="heroMascotSlot" aria-hidden="true"></span>
+            Click the Cute Labubo
+          </button>
+          <a class="link-btn" href="#phases">See the phases ↓</a>
+        </div>
+        <p class="hint" id="connectHint">Hooking Labubo up to your project…</p>
+      </div>
+
+      <div class="hero-stage" id="heroStage" aria-hidden="true">
+        <div class="stage-glow"></div>
+        <div class="stage-ring ring-a"></div>
+        <div class="stage-ring ring-b"></div>
+        <div class="mascot-float" id="mascotFloat"></div>
+        <div class="stage-shadow"></div>
+      </div>
+    </section>
+
+    <section class="stats" id="stats" aria-label="Project summary">
+      <article class="stat-card">
+        <span class="stat-label">Overall progress</span>
+        <strong class="stat-value" id="statOverall">—</strong>
+        <div class="mini-bar"><span id="statOverallBar"></span></div>
+      </article>
+      <article class="stat-card">
+        <span class="stat-label">Current phase</span>
+        <strong class="stat-value small" id="statPhase">—</strong>
+        <span class="stat-sub" id="statTask">—</span>
+      </article>
+      <article class="stat-card">
+        <span class="stat-label">Steps done</span>
+        <strong class="stat-value" id="statDone">—</strong>
+        <span class="stat-sub" id="statMood">Labubo is watching 👀</span>
+      </article>
+      <article class="stat-card">
+        <span class="stat-label">Last update</span>
+        <strong class="stat-value small" id="statUpdated">—</strong>
+        <span class="stat-sub" id="statSync">—</span>
+      </article>
+    </section>
+
+    <section class="phases" id="phases">
+      <div class="section-head">
+        <h2>The build, phase by phase</h2>
+        <p>This is exactly what Labubo will show you when you tap it.</p>
+      </div>
+      <div class="phase-grid" id="phaseGrid"></div>
+    </section>
+
+    <section class="about" id="about">
+      <div class="about-card">
+        <div class="about-mascot" id="aboutMascot" aria-hidden="true"></div>
+        <div>
+          <h2>How Labubo knows what's happening</h2>
+          <p>
+            Labubo reads a plain little file called <code>project-status.json</code> from your project.
+            Every time you finish a step, update that file and Labubo refreshes itself within a few seconds —
+            no rebuild, no restart.
+          </p>
+          <ol class="steps">
+            <li>Open <code>project-status.json</code> next to this file's folder.</li>
+            <li>Mark a step <code>"done"</code>, <code>"active"</code>, <code>"blocked"</code> or <code>"todo"</code>.</li>
+            <li>Click Labubo — the panel is already updated.</li>
+          </ol>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <span>Made with 🧸 for your project</span>
+    <span class="footer-sep">•</span>
+    <span>Labubo v1.0</span>
+  </footer>
+
+  <!-- ============ Labubo companion ============ -->
+  <div class="labubo-root" id="labuboRoot">
+    <div class="labubo-backdrop" id="labuboBackdrop" hidden></div>
+
+    <aside class="labubo-panel" id="labuboPanel" role="dialog" aria-modal="false"
+           aria-labelledby="labuboPanelTitle" hidden>
+      <header class="panel-head">
+        <div class="panel-avatar" id="panelAvatar" aria-hidden="true"></div>
+        <div class="panel-title-wrap">
+          <h3 id="labuboPanelTitle">Cute Labubo</h3>
+          <p class="panel-sub" id="panelSub">Your project buddy</p>
+        </div>
+        <button class="icon-btn" id="labuboClose" type="button" aria-label="Close Labubo">✕</button>
+      </header>
+
+      <div class="panel-speech" id="panelSpeech">
+        <span id="panelSpeechText">Hi! I'm Labubo 🐣</span>
+      </div>
+
+      <div class="panel-body" id="labuboBody">
+        <div class="panel-loading">
+          <div class="loader-dots"><i></i><i></i><i></i></div>
+          <span>Labubo is reading your project…</span>
+        </div>
+      </div>
+
+      <footer class="panel-foot">
+        <div class="overall-wrap">
+          <div class="overall-label">
+            <span>Overall</span>
+            <strong id="panelOverall">—</strong>
+          </div>
+          <div class="overall-bar"><span id="panelOverallBar"></span></div>
+        </div>
+        <button class="icon-btn" id="labuboRefresh" type="button" title="Refresh">↻</button>
+      </footer>
+    </aside>
+
+    <button class="labubo-btn" id="labuboBtn" type="button"
+            aria-label="Open Cute Labubo, your project companion"
+            aria-expanded="false" aria-controls="labuboPanel">
+      <span class="labubo-btn-aura" aria-hidden="true"></span>
+      <span class="labubo-btn-shell" aria-hidden="true"></span>
+      <span class="labubo-btn-art" id="labuboBtnArt" aria-hidden="true"></span>
+      <span class="labubo-btn-badge" id="labuboBadge" hidden>!</span>
+      <span class="labubo-btn-label">Cute Labubo</span>
+    </button>
+  </div>
+
+  <script src="/app.js" type="module"></script>
+</body>
+</html>
