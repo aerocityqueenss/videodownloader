@@ -1,0 +1,17 @@
+{
+  "name": "labubo-project-hub",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A cute companion called Labubo that shows the live progress of your project.",
+  "type": "module",
+  "main": "server.mjs",
+  "scripts": {
+    "start": "node server.mjs",
+    "dev": "node server.mjs --watch"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": ["companion", "labubo", "progress", "tracker"],
+  "license": "MIT"
+}

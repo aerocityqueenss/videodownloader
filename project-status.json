@@ -1,0 +1,62 @@
+{
+  "name": "Labubo Project Hub",
+  "version": "1.0.0",
+  "description": "A cute Labubo companion that walks you through your project's process.",
+  "updatedAt": "2026-10-23T14:48:00+05:30",
+  "phases": [
+    {
+      "title": "Discover",
+      "icon": "🔍",
+      "summary": "Understand what the project needs to do.",
+      "steps": [
+        { "title": "Define the goal", "detail": "A companion that shows the project's live process.", "status": "done" },
+        { "title": "Sketch the companion", "detail": "Floating button, speech bubble, progress panel.", "status": "done" },
+        { "title": "Pick the tech", "detail": "Zero-dependency Node server + vanilla JS bundles.", "status": "done" }
+      ]
+    },
+    {
+      "title": "Design",
+      "icon": "🎨",
+      "summary": "Give Labubo a face and the app a lovely look.",
+      "steps": [
+        { "title": "Draw the Cute Labubo", "detail": "SVG mascot with ears, fangs and moods.", "status": "done" },
+        { "title": "Colour & typography", "detail": "Warm cream palette with pink accents.", "status": "done" },
+        { "title": "Motion & micro-interactions", "detail": "Ear wiggles, blinking, floating, hearts.", "status": "done" }
+      ]
+    },
+    {
+      "title": "Build",
+      "icon": "🛠️",
+      "summary": "Wire the companion to the project data.",
+      "steps": [
+        { "title": "Static server", "detail": "node:http server with MIME + path guards.", "status": "done" },
+        { "title": "Project status API", "detail": "GET /api/project normalises progress.", "status": "done" },
+        { "title": "Companion panel", "detail": "Click Labubo to open the live process view.", "status": "done" },
+        { "title": "Live sync", "detail": "Auto-refresh every few seconds without reload.", "status": "done" }
+      ]
+    },
+    {
+      "title": "Verify",
+      "icon": "🧪",
+      "summary": "Make sure the little one is reliable.",
+      "steps": [
+        { "title": "Start the server", "detail": "npm start → http://127.0.0.1:4173", "status": "active" },
+        { "title": "Click the Cute Labubo", "detail": "Check the panel renders your phases.", "status": "todo" },
+        { "title": "Edit project-status.json", "detail": "Confirm the panel updates on its own.", "status": "todo" }
+      ]
+    },
+    {
+      "title": "Launch",
+      "icon": "🚀",
+      "summary": "Ship it and keep the companion fed.",
+      "steps": [
+        { "title": "Final review", "status": "todo" },
+        { "title": "Share the link", "status": "todo" }
+      ]
+    }
+  ],
+  "notes": [
+    "Edit this file any time — Labubo re-reads it every 5 seconds.",
+    "Statuses: done · active · blocked · todo"
+  ]
+}
